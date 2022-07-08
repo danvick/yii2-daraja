@@ -17,9 +17,10 @@ use yii\httpclient\Client;
  *
  * @property-read Client $httpClient
  * @property-read C2B $c2b
+ * @property-write string $commandId
  * @property-read STK $stk
  */
-class Daraja extends BaseObject
+class Daraja extends Component
 {
     /**
      * Safaricom MPESA APIs application consumer key.
@@ -122,9 +123,10 @@ class Daraja extends BaseObject
     {
         // Set the auth option
         $accessTokenDetails = $this->call('oauth/v1/generate?grant_type=client_credentials', 'GET', null, $headers = [
-            'Authorization' => 'Basic ' . base64_encode("$this->consumerKey:$this->consumerSecret"),
+            'Authorization' => "Basic " . base64_encode("$this->consumerKey:$this->consumerSecret"),
         ]);
-        $this->accessToken = $accessTokenDetails->access_token;
+        echo VarDumper::dumpAsString($accessTokenDetails);
+        $this->accessToken = $accessTokenDetails['access_token'];
     }
 
     /**
@@ -157,9 +159,128 @@ class Daraja extends BaseObject
         $responseContent = Json::decode($response->content, true);
         if (!$response->isOk) {
             Yii::error("RESPONSE ERROR: " . VarDumper::dumpAsString($responseContent) . " \nREQUEST DATA: " . VarDumper::dumpAsString($data));
-            throw new Exception($responseContent['message']);
+            trigger_error(VarDumper::dumpAsString($responseContent));
+            throw new Exception(VarDumper::dumpAsString($responseContent));
         }
         return $responseContent;
     }
-}
 
+    /**
+     * The Safaricom C2B API end point for registering the confirmation
+     * and validation URLs.
+     *
+     * @var string
+     */
+    protected $urlRegistrationEndPoint = 'mpesa/c2b/v1/registerurl';
+
+    /**
+     * The Safaricom C2B API end point for simulating a C2B transaction.
+     *
+     * @var string
+     */
+    protected $simulationEndpoint = 'mpesa/c2b/v1/simulate';
+
+    /**
+     * The Safaricom C2B API command ID.
+     *
+     * @var string
+     */
+    protected $commandID;
+
+    /**
+     * Register the confirmation and validation URLs to the Safaricom C2B API.
+     *
+     * @param string $confirmationUrl
+     * @param string $validationUrl
+     * @param string $responseType
+     * @param null|string $shortCode
+     * @return mixed
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
+     */
+    public function registerUrls(string $confirmationUrl, string $validationUrl, string $responseType = 'Completed', string $shortCode = null)
+    {
+        $parameters = [
+            'ShortCode' => is_null($shortCode) ? $this->shortCode : $shortCode,
+            'ResponseType' => $responseType,
+            'ConfirmationURL' => $confirmationUrl,
+            'ValidationURL' => $validationUrl,
+        ];
+
+        return $this->call($this->urlRegistrationEndPoint, 'POST', $parameters);
+    }
+
+    /**
+     * Set the command ID to be used for the transaction.
+     *
+     * @param string $commandId
+     */
+    public function setCommandId(string $commandId)
+    {
+        $this->commandID = $commandId;
+    }
+
+    /**
+     * Simulate customer payment to a pay bill number through Safaricom C2B API.
+     *
+     * @param string $phoneNumber
+     * @param string $amount
+     * @param string $reference
+     * @param string|null $shortCode
+     * @return mixed
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
+     */
+    public function simulatePaymentToPaybill(string $phoneNumber, string $amount, string $reference, string $shortCode = null)
+    {
+        $this->setCommandId('CustomerPayBillOnline');
+
+        return $this->simulate($phoneNumber, $amount, $reference, $shortCode);
+    }
+
+    /**
+     * Simulate customer payment to a till number through Safaricom C2B API.
+     *
+     * @param string $phoneNumber
+     * @param string $amount
+     * @param string $reference
+     * @param string|null $shortCode
+     * @return mixed
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
+     */
+    public function simulatePaymentToTill(string $phoneNumber, string $amount, string $reference, string $shortCode = null)
+    {
+        $this->setCommandId('CustomerBuyGoodsOnline');
+
+        return $this->simulate($phoneNumber, $amount, $reference, $shortCode);
+    }
+
+    /**
+     * Send the transaction to be simulated to the Safaricom C2B API.
+     *
+     * @param $phoneNumber
+     * @param $amount
+     * @param $reference
+     * @param null $shortCode
+     * @return mixed
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
+     */
+    protected function simulate($phoneNumber, $amount, $reference, $shortCode = null)
+    {
+        $data = [
+            'ShortCode' => is_null($shortCode) ? $this->shortCode : $shortCode,
+            'CommandID' => $this->commandID,
+            'Amount' => $amount,
+            'Msisdn' => $phoneNumber,
+            'BillRefNumber' => $reference,
+        ];
+
+        return $this->call($this->simulationEndpoint,'POST',  $data);
+    }
+}
