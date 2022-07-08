@@ -57,7 +57,9 @@ class Daraja extends BaseObject
     ];
 
     /**
+     * @throws Exception
      * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
      */
     public function init()
     {
@@ -69,6 +71,7 @@ class Daraja extends BaseObject
         if (empty($this->consumerSecret)) {
             throw new InvalidConfigException('Consumer secret has not been set');
         }
+        $this->fetchAccessToken();
     }
 
     /**
