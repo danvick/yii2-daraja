@@ -6,6 +6,7 @@ namespace danvick\daraja\commands;
 use danvick\daraja\requests\C2B;
 use Yii;
 use yii\console\Controller;
+use yii\helpers\VarDumper;
 
 class DarajaCliController extends Controller
 {
@@ -15,12 +16,15 @@ class DarajaCliController extends Controller
         \Yii::$app->has()
     }*/
 
-    public function actionRegisterUrls(string $confirmationUrl, string $validationUrl, string $responseType = 'Completed')
+    public function actionRegisterUrls(string $confirmationUrl, string $validationUrl, string $responseType = 'Completed', string $shortCode = null)
     {
-        /** @var C2B $c2b */
-        $c2b = Yii::$app->get('daraja')->c2b;
-        $c2b->registerUrls($confirmationUrl, $validationUrl);
+        $response = Yii::$app->daraja->registerUrls($confirmationUrl, $validationUrl, $responseType, $shortCode);
+        echo VarDumper::dumpAsString($response);
     }
 
-
+    public function actionSimulatePaybillPayment(string $phoneNumber, string $amount, string $reference, string $shortCode = null)
+    {
+        $response = Yii::$app->daraja->simulatePaymentToPaybill($phoneNumber, $amount, $reference, $shortCode);
+        echo VarDumper::dumpAsString($response);
+    }
 }
