@@ -19,5 +19,8 @@ class DarajaCliController extends Controller
     {
         /** @var C2B $c2b */
         $c2b = Yii::$app->get('daraja')->c2b;
+        $c2b->registerUrls($confirmationUrl, $validationUrl);
     }
+
+
 }
