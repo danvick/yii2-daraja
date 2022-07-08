@@ -122,7 +122,7 @@ class Daraja extends BaseObject
     {
         // Set the auth option
         $accessTokenDetails = $this->call('oauth/v1/generate?grant_type=client_credentials', 'GET', null, $headers = [
-            'Authorize' => base64_encode("$this->consumerKey:$this->consumerSecret"),
+            'Authorization' => 'Basic ' . base64_encode("$this->consumerKey:$this->consumerSecret"),
         ]);
         $this->accessToken = $accessTokenDetails->access_token;
     }
