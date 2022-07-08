@@ -1,0 +1,30 @@
+{
+    "name": "danvick/yii2-daraja",
+    "description": "Yii2 extension for integrating with Safaricom's Daraja API",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Danvick Miller",
+            "email": "danvickmiller@gmail.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "~2.0.0",
+        "yiisoft/yii2-httpclient": "*"
+    }
+    ,
+    "require-dev": {
+        "roave/security-advisories": "dev-latest"
+    },
+    "autoload": {
+        "psr-4": {
+            "danvick\\daraja\\": "src",
+            "danvick\\daraja\\commands\\": "src/commands",
+            "danvick\\daraja\\requests\\": "src/requests",
+            "danvick\\daraja\\exceptions\\": "src/exceptions",
+            "danvick\\daraja\\models\\": "src/models"
+        }
+    }
+}
