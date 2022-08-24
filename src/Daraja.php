@@ -171,7 +171,7 @@ class Daraja extends Component
      *
      * @var string
      */
-    protected $urlRegistrationEndPoint = 'mpesa/c2b/v1/registerurl';
+    protected $urlRegistrationEndPoint = 'mpesa/c2b/v2/registerurl';
 
     /**
      * The Safaricom C2B API end point for simulating a C2B transaction.
