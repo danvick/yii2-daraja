@@ -5,7 +5,6 @@ namespace danvick\daraja;
 use danvick\daraja\requests\C2B;
 use danvick\daraja\requests\STK;
 use Yii;
-use yii\base\BaseObject;
 use yii\base\Component;
 use yii\base\Exception;
 use yii\base\InvalidConfigException;
@@ -58,9 +57,7 @@ class Daraja extends Component
     ];
 
     /**
-     * @throws Exception
      * @throws InvalidConfigException
-     * @throws \yii\httpclient\Exception
      */
     public function init()
     {
@@ -72,7 +69,6 @@ class Daraja extends Component
         if (empty($this->consumerSecret)) {
             throw new InvalidConfigException('Consumer secret has not been set');
         }
-        $this->fetchAccessToken();
     }
 
     /**
@@ -146,8 +142,11 @@ class Daraja extends Component
         $request = $this->httpClient->createRequest()
             ->setUrl($url)
             ->setMethod($method);
+        if (empty($this->accessToken) && stripos($url, 'oauth') === false) {
+            $this->fetchAccessToken();
+        }
         if (isset($this->accessToken)) {
-            $request->addHeaders(['Authorization' => 'Bearer ' . $this->accessToken]);
+            $request->addHeaders(['Authorization' => "Bearer $this->accessToken"]);
         }
         if ($data) {
             $request->setData($data);
@@ -281,6 +280,6 @@ class Daraja extends Component
             'BillRefNumber' => $reference,
         ];
 
-        return $this->call($this->simulationEndpoint,'POST',  $data);
+        return $this->call($this->simulationEndpoint, 'POST', $data);
     }
 }
